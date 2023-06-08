@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<title>Twitter Clone</title>
+</head>
+
+<body style="margin-left:10%;margin-top:10%;background-color:#F5F8FA;">
+
+	<header>
+		<h1 style="color:#1DA1F2">Twitter Clone</h1>
+		<div id="status"></div>
+	</header>
+
+	<nav>
+		<div id="connecting">
+			<p>Input client URL to connect</p>
+			<input type='text' id="server" value=""></input>
+			<button type="button" onclick="toggle_connection()"><b>Connect</b></button>
+		</div>
+
+		<div id="connected">
+			<button type="button" onclick="showRegister();">Register</button>
+			<button type="button" onclick="showLogin();">Login</button>
+		</div>
+
+	</nav>
+
+	<main id="content">
+		<!-- Registration flow -->
+		<div id="showRegisterDiv">
+			<b>Sign Up</b><br>
+			<input type='text' id="username" value=""></input><br>
+			<input type='text' id="password" value=""></input><br>
+			<button id="register" onclick="register()">Register</button>
+			<br><br>
+		</div>
+		<!-- Login flow -->
+		<div id="showLoginDiv">
+			<b>Login</b><br>
+			<input type='text' id="usernameL" value=""></input><br>
+			<input type='text' id="passwordL" value=""></input><br>
+			<button id="login" onclick="login()">Login</button>
+		</div>
+		<br><br>
+		<!-- Twitter functionalities flow -->
+		<div id="actions">
+			<input type='text' id="tweetMsg" value=""></input><br>
+			<button id="tweet" onclick="tweet()">Tweet</button><br><br>
+
+			<input type='text' id="userToFollow" value=""></input><br>
+			<button id="follow" onclick="follow()">Follow</button><br><br>
+
+			<button id="viewFeed" onclick="viewFeed()">View Feed</button><br><br>
+
+			<input type='text' id="searchHtInput" value=""></input><br>
+			<button id="searchHT" onclick="searchHT()">Search by Hastag</button><br><br>
+
+			<input type='text' id="searchMentionInput" value=""></input><br>
+			<button id="searchMention" onclick="searchMention()">Search by @mention</button><br><br>
+
+			<input type='text' id="retweetInput" value=""></input><br>
+			<button id="retweetBtn" onclick="reTweet()">Retweet</button><br><br>
+
+			<button id="logoutBtn" onclick="logout()">Logout</button><br><br>
+		</div>
+		<p><b>
+			<script type="text/javascript">document.write(currUsername);</script>Your Twitter Log:
+		</b></p>
+		<div id="output"></div>
+	</main>
+
+	<script type="text/javascript">
+		var currUsername;
+		var websocket;
+		var server = document.getElementById("server");
+		var message = document.getElementById("message");
+		var username = document.getElementById("username");
+		var password = document.getElementById("password");
+		var connecting = document.getElementById("connecting");
+		var connected = document.getElementById("connected");
+		var actions = document.getElementById("actions");
+		var showLoginDiv = document.getElementById("showLoginDiv");
+		var showRegisterDiv = document.getElementById("showRegisterDiv");
+		var content = document.getElementById("content");
+		var output = document.getElementById("output");
+		var tweetMsg = document.getElementById("tweetMsg");
+		var userToFollow = document.getElementById("userToFollow");
+		var hashtag = document.getElementById("searchHtInput");
+		var mention = document.getElementById("searchMentionInput");
+		var retweet = document.getElementById("retweetInput");
+
+		server.value = "ws://" + window.location.host + "/websocket";
+		connected.style.display = "none";
+		content.style.display = "none";
+		actions.style.display = "none";
+		showRegisterDiv.style.display = "none";
+		showLoginDiv.style.display = "none";
+
+		function connect() {
+			wsHost = server.value;
+			websocket = new WebSocket(wsHost);
+			showScreen('<b>Connecting to: ' + wsHost + '</b>');
+			websocket.onopen = function (evt) { onOpen(evt) };
+			websocket.onclose = function (evt) { onClose(evt) };
+			websocket.onmessage = function (evt) { onMessage(evt) };
+			websocket.onerror = function (evt) { onError(evt) };
+		};
+
+		function disconnect() {
+			websocket.close();
+		};
+
+		function showRegister() {
+			showRegisterDiv.style.display = "block";
+			connected.style.display = "none";
+		};
+
+		function showLogin() {
+			showLoginDiv.style.display = "block";
+			connected.style.display = "none";
+		};
+
+		function register() {
+			var uname = username.value;
+			currUsername = uname;
+			var pwd = password.value;
+			var msg = 'Register>>>>' + uname + '>>>>' + pwd;
+			websocket.send(msg);
+			actions.style.display = "block";
+			showRegisterDiv.style.display = "none";
+			username.value = "";
+			password.value = "";
+		};
+		function login() {
+			var uname = usernameL.value;
+			currUsername = uname;
+			var pwd = passwordL.value;
+			var msg = 'Login>>>>' + uname + '>>>>' + pwd;
+			websocket.send(msg);
+			actions.style.display = "block";
+			showLoginDiv.style.display = "none";
+			usernameL.value = "";
+			passwordL.value = "";
+		};
+
+		function logout() {
+			var msg = 'Logout>>>>' + currUsername;
+			websocket.send(msg);
+			actions.style.display = "none";
+			connected.style.display = "block";
+		};
+
+		function tweet() {
+			var msg = "Tweet>>>>" + currUsername + ">>>>" + tweetMsg.value;
+			websocket.send(msg);
+			tweetMsg.value = "";
+		};
+
+		function follow() {
+			var uname = userToFollow.value;
+			var msg = "Follow>>>>" + currUsername + ">>>>" + uname;
+			websocket.send(msg);
+			userToFollow.value = "";
+		};
+
+		function viewFeed() {
+			var msg = "ViewFeed>>>>" + currUsername;
+			websocket.send(msg);
+		};
+		function searchHT() {
+			var msg = "Hashtag>>>>" + hashtag.value;
+			websocket.send(msg);
+			hashtag.value = "";
+		};
+		function searchMention() {
+			var msg = "Mention>>>>" + mention.value;
+			websocket.send(msg);
+			mention.value = "";
+		};
+
+		function reTweet() {
+			var msg = "Retweet>>>>" + currUsername + ">>>>" + retweet.value;
+			websocket.send(msg);
+			retweet.value = "";
+		};
+
+		function printTables() {
+			var msg = "PrintTables";
+			websocket.send(msg);
+		};
+
+		function toggle_connection() {
+			if (websocket && websocket.readyState == websocket.OPEN) {
+				disconnect();
+			} else {
+				connect();
+			};
+		};
+
+		function onOpen(evt) {
+			showScreen('<span style="color: green;">CONNECTED </span>');
+			connecting.style.display = "none";
+			connected.style.display = "";
+			content.style.display = "";
+		};
+
+		function onClose(evt) {
+			showScreen('<span style="color: red;">DISCONNECTED</span>');
+		};
+
+		function onMessage(evt) {
+			showScreen('<span style="color: blue;">RESPONSE: ' + evt.data + '</span>');
+			if ((evt.data).includes("already registered, try logging in") ||
+				(evt.data).includes("Incorrect username/password. Try logging in again.")) {
+				actions.style.display = "none";
+				showLoginDiv.style.display = "block";
+			}
+		};
+
+		function onError(evt) {
+			showScreen('<span style="color: red;">ERROR: ' + evt.data + '</span>');
+		};
+
+		function showScreen(html) {
+			var el = document.createElement("p");
+			el.innerHTML = html;
+			output.insertBefore(el, output.firstChild);
+		};
+	</script>
+
+</body>
+</html>
